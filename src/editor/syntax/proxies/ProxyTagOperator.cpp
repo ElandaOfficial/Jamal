@@ -78,6 +78,7 @@ int ProxyTagOperator::processToken(TokenIterator &iterator)
                 return JamlTokenList::TagOperator;
             }
             
+            ++iterator;
             break;
         }
         

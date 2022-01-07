@@ -21,17 +21,18 @@
 #pragma once
 
 #include "ITokenProxy.h"
+#include "../TokenHighlighter.h"
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-class JamlTokeniser : public juce::CodeTokeniser
+class JamlTokeniser : public TokenHighlighter
 {
 public:
     JamlTokeniser();
     
     //==================================================================================================================
-    int readNextToken(juce::CodeDocument::Iterator &source)          override;
-    juce::CodeEditorComponent::ColourScheme getDefaultColourScheme() override;
+    TokenInfo readNextToken(juce::CodeDocument::Iterator &source)    override;
+    CodeEditor::ColourScheme getDefaultColourScheme() override;
     
     //==================================================================================================================
     bool registerProxy(std::unique_ptr<ITokenProxy> proxy);

@@ -46,8 +46,6 @@ R"(<aircraft type='F-16'>
     
     editor.setFont(editor.getFont().withHeight(17.0f));
     addAndMakeVisible(editor);
-    
-    startTimer(100);
 }
 
 //======================================================================================================================

@@ -109,6 +109,8 @@ void JamlTokeniserUtils::skipToEndOfText(TokenIterator &iterator) noexcept
 //======================================================================================================================
 bool JamlTokeniserUtils::isTagOpen(TokenIterator iterator) noexcept
 {
+    --iterator;
+    
     for (;; --iterator)
     {
         const juce::juce_wchar c = *iterator;
@@ -216,21 +218,26 @@ bool JamlTokeniserUtils::isPrecededByIdentifier(TokenIterator iterator) noexcept
     for (; *iterator != 0; --iterator)
     {
         const juce::juce_wchar c = *iterator;
-        
-        if ((juce::CharacterFunctions::isWhitespace(c) && found_at_least_one)
+        const bool is_whitespace  = juce::CharacterFunctions::isWhitespace(c);
+    
+        if ((found_at_least_one && is_whitespace)
             || c == ':' || c == '<' || iterator.isEndOf("</"))
         {
             break;
         }
         
-        if (!juce::CppTokeniserFunctions::isIdentifierBody(c) && !juce::CharacterFunctions::isWhitespace(c))
+        if (!juce::CppTokeniserFunctions::isIdentifierBody(c) && !is_whitespace)
         {
             return false;
         }
         
-        found_at_least_one = true;
+        if (!is_whitespace)
+        {
+            found_at_least_one = true;
+        }
     }
     
+    ++iterator;
     return found_at_least_one && juce::CppTokeniserFunctions::isIdentifierStart(iterator.peekNext());
 }
 

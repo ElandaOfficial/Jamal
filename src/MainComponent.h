@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include "editor/CodeEditor.h"
 #include "editor/syntax/JamlTokeniser.h"
 
 #include <juce_gui_extra/juce_gui_extra.h>
@@ -32,7 +33,7 @@
 
 
 //======================================================================================================================
-class MainComponent : public juce::Component, public juce::Timer
+class MainComponent : public juce::Component
 {
 public:
     MainComponent();
@@ -42,15 +43,9 @@ public:
     void resized() override;
     
 private:
-    juce::CodeDocument        document;
-    JamlTokeniser             tokeniser;
-    juce::CodeEditorComponent editor;
-    
-    //==================================================================================================================
-    void timerCallback() override
-    {
-        editor.retokenise(0, document.getNumCharacters() - 1);
-    }
+    juce::CodeDocument document;
+    JamlTokeniser      tokeniser;
+    CodeEditor         editor;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

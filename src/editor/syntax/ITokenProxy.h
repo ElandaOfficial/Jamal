@@ -30,6 +30,22 @@ public:
         DefaultToken = 0
     };
     
+    struct TokenInfo
+    {
+    public:
+        int colourId;
+        int styleFlags {};
+        
+        //==============================================================================================================
+        TokenInfo(int id)
+            : colourId(id)
+        {}
+        
+        TokenInfo(int id, int fontStyleFlags)
+            : colourId(id), styleFlags(fontStyleFlags)
+        {}
+    };
+    
     //==================================================================================================================
     virtual ~ITokenProxy() = default;
     

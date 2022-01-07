@@ -4,6 +4,9 @@ target_sources(${JAMAL_PROJECT_TARGET}
         Main.cpp
         MainComponent.cpp
         
+        ### Editor
+        editor/CodeEditor.cpp
+        
             ## Tokeniser
             editor/syntax/TokenIterator.cpp
             editor/syntax/JamlTokeniser.cpp

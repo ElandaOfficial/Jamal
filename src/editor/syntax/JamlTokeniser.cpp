@@ -36,7 +36,7 @@ namespace
         {
             const juce::juce_wchar c = source.peekNextChar();
             
-            if (c == 0 || c == '<' || c == '&')
+            if (c == 0 || c == '<' || c == '&' || juce::CharacterFunctions::isWhitespace(c))
             {
                 break;
             }
@@ -58,9 +58,15 @@ JamlTokeniser::JamlTokeniser()
 }
 
 //======================================================================================================================
-int JamlTokeniser::readNextToken(juce::CodeDocument::Iterator &source)
+JamlTokeniser::TokenInfo JamlTokeniser::readNextToken(juce::CodeDocument::Iterator &source)
 {
-    source.skipWhitespace();
+    DBG("RUNNING");
+    
+    if (juce::CharacterFunctions::isWhitespace(source.peekNextChar()))
+    {
+        source.skipWhitespace();
+        return JamlTokenList::Whitespace;
+    }
     
     for (const auto &proxy : proxies)
     {
@@ -83,9 +89,9 @@ int JamlTokeniser::readNextToken(juce::CodeDocument::Iterator &source)
     return JamlTokenList::Text;
 }
 
-juce::CodeEditorComponent::ColourScheme JamlTokeniser::getDefaultColourScheme()
+CodeEditor::ColourScheme JamlTokeniser::getDefaultColourScheme()
 {
-    juce::CodeEditorComponent::ColourScheme scheme;
+    CodeEditor::ColourScheme scheme;
     
     for (const auto &[name, code] : JamlTokenList::colours)
     {

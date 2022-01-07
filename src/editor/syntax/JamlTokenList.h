@@ -38,7 +38,8 @@ struct JamlTokenList
         Entity,
         CDataText,
         Namespace,
-        XmlnsDeclaration
+        XmlnsDeclaration,
+        Whitespace
     };
     
     //==================================================================================================================
@@ -51,7 +52,7 @@ struct JamlTokenList
     //==================================================================================================================
     static constexpr std::array colours {
         ColourPair { "Text",               0xFFD3D3D3 }, // light grey
-        ColourPair { "ProxyTagOperator",   0xFFD3D3D3 }, // light grey
+        ColourPair { "TagOperator",        0xFFFF0000 }, // light grey
         ColourPair { "TagName",            0xFF68BBE3 }, // keyword blue
         ColourPair { "TagCData",           0xFF9370DB }, // medium purple
         ColourPair { "TagPreprocessor",    0xFFFFC0CB }, // pink
@@ -63,6 +64,7 @@ struct JamlTokenList
         ColourPair { "Entity",             0xFFFFFF00 }, // yellow
         ColourPair { "CDataText",          0xFFADFF2F }, // green yellow
         ColourPair { "Namespace",          0xFF696969 }, // dim grey
-        ColourPair { "XmlnsDeclaration",   0xFF228B22 }  // orest green
+        ColourPair { "XmlnsDeclaration",   0xFF228B22 }, // orest green
+        ColourPair { "Whitespace",         0x00000000 }  // blank 
     };
 };

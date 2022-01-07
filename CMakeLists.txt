@@ -37,6 +37,7 @@ target_compile_definitions(${JAMAL_PROJECT_TARGET}
     PRIVATE
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
+        JUCE_MODAL_LOOPS_PERMITTED=1
         JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:${JAMAL_PROJECT_TARGET},JUCE_PRODUCT_NAME>"
         JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:${JAMAL_PROJECT_TARGET},JUCE_VERSION>")
 
@@ -50,4 +51,4 @@ target_link_libraries(${JAMAL_PROJECT_TARGET}
         juce::juce_recommended_warning_flags
 
         # Jaut
-        jaut::jaut_core)
+        jaut::jaut_gui)
