@@ -29,11 +29,25 @@
 MainComponent::MainComponent()
     : editor(document, &tokeniser)
 {
-    document.insertText(0, "<Window xmlns:x=\"https://anything\">\n</Window>");
+    document.insertText(0,
+R"(<aircraft type='F-16'>
+    <!-- Snapshot of an F-16 in flight -->
+    <altitude units="meters">10000</altitude>
+    <headingNorth/>
+    <?altimeter reading="30.1"?>
+    <description><![CDATA[bumpy ride due to turbulence]]></description>
+    <pilots>Johnson &amp; Smith</pilots>
+    <footnote>Producer &#169; aerodata </footnote>
+    <footnote>Editor &#xA9; workshop</footnote>
+</aircraft>
+)");
+    
     setSize(900, 600);
     
     editor.setFont(editor.getFont().withHeight(17.0f));
     addAndMakeVisible(editor);
+    
+    startTimer(100);
 }
 
 //======================================================================================================================

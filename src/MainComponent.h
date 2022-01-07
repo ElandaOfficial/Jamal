@@ -25,13 +25,14 @@
 
 #pragma once
 
-#include "editor/JamlTokeniser.h"
+#include "editor/syntax/JamlTokeniser.h"
 
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <jaut_core/jaut_core.h>
 
+
 //======================================================================================================================
-class MainComponent : public juce::Component
+class MainComponent : public juce::Component, public juce::Timer
 {
 public:
     MainComponent();
@@ -41,10 +42,15 @@ public:
     void resized() override;
     
 private:
-    juce::CodeDocument document;
-    JamlTokeniser      tokeniser;
-    
+    juce::CodeDocument        document;
+    JamlTokeniser             tokeniser;
     juce::CodeEditorComponent editor;
+    
+    //==================================================================================================================
+    void timerCallback() override
+    {
+        editor.retokenise(0, document.getNumCharacters() - 1);
+    }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

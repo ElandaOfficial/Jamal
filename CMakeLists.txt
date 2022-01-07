@@ -9,6 +9,7 @@ set(JAMAL_PROJECT_VERSION "0.1.0")
 
 # Settings
 set(CMAKE_MINIMUM_REQUIRED_VERSION 17)
+set(COLORER_USE_VCPKG              OFF)
 
 ########################################################################################################################
 project(${JAMAL_PROJECT_TARGET}
@@ -19,6 +20,7 @@ project(${JAMAL_PROJECT_TARGET}
 # Dependencies
 add_subdirectory(lib/juce)
 add_subdirectory(lib/jaut)
+add_subdirectory(lib/colorer)
 
 ########################################################################################################################
 juce_add_gui_app(${JAMAL_PROJECT_TARGET}
@@ -40,10 +42,12 @@ target_compile_definitions(${JAMAL_PROJECT_TARGET}
 
 target_link_libraries(${JAMAL_PROJECT_TARGET}
     PRIVATE
+        # Juce
         juce::juce_gui_extra
 
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
 
+        # Jaut
         jaut::jaut_core)
