@@ -6,3 +6,6 @@
 	path = lib/jaut
 	url = git@github.com:ElandaSunshine/jaut
 	branch = develop
+[submodule "lib/colorer"]
+	path = lib/colorer
+	url = https://github.com/colorer/Colorer-library
