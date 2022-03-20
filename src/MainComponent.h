@@ -26,7 +26,6 @@
 #pragma once
 
 #include "editor/CodeEditor.h"
-#include "editor/syntax/JamlTokeniser.h"
 
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <jaut_core/jaut_core.h>
@@ -44,7 +43,6 @@ public:
     
 private:
     juce::CodeDocument document;
-    JamlTokeniser      tokeniser;
     CodeEditor         editor;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)

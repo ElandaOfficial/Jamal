@@ -6,16 +6,11 @@ target_sources(${JAMAL_PROJECT_TARGET}
         
         ### Editor
         editor/CodeEditor.cpp
-        
-            ## Tokeniser
-            editor/syntax/TokenIterator.cpp
-            editor/syntax/JamlTokeniser.cpp
-            editor/syntax/JamlTokeniserUtils.cpp
+        editor/TextView.cpp
+            ## Render
+            editor/render/TextViewLayout.cpp
             
-                # Proxies
-                editor/syntax/proxies/ProxyCDataBlock.cpp
-                editor/syntax/proxies/ProxyEntity.cpp
-                editor/syntax/proxies/ProxyLiteral.cpp
-                editor/syntax/proxies/ProxyOperator.cpp
-                editor/syntax/proxies/ProxyTagOperator.cpp
-                editor/syntax/proxies/ProxyText.cpp)
+            ## Syntax
+                # TextMate
+                editor/syntax/textmate/TextMateCache.cpp
+                editor/syntax/textmate/TextMateParser.cpp)

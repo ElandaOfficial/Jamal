@@ -4,38 +4,42 @@
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any internal version.
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
+
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <https://www.gnu.org/licenses/>.
+
     Copyright (c) 2021 ElandaSunshine
     ===============================================================
+
     @author Elanda
-    @file   ProxyCDataBlock.cpp
-    @date   06, January 2022
+    @file   MessageOpenDocument.cpp
+    @date   12, January 2022
+
     ===============================================================
  */
- 
-#include "ProxyCDataBlock.h"
 
-#include "../JamlTokeniserUtils.h"
-#include "../JamlTokenList.h"
+#include "MessageOpenDocument.h"
+#include "../XmlAnalyser.h"
 
-bool ProxyCDataBlock::validate(const TokenIterator &iterator) const
+#include <xercesc/parsers/XercesDOMParser.hpp>
+
+//======================================================================================================================
+MessageOpenDocument::MessageOpenDocument(juce::String parDocumentId, juce::String parText)
+    : documentId(std::move(parDocumentId)), text(std::move(parText))
+{}
+
+//======================================================================================================================
+void MessageOpenDocument::handleMessage(jaut::IMessageHandler *context, jaut::MessageDirection messageDirection)
 {
-    return iterator.isPrecededByToken('[') && JamlTokeniserUtils::isCDataBlock(iterator);
-}
-
-int ProxyCDataBlock::processToken(TokenIterator &token)
-{
-    if (*token == ']' && token.isStartOf("]]>"))
-    {
-        token += 3;
-        return JamlTokenList::TagCData;
-    }
+    auto *const analyser = static_cast<XmlAnalyser*>(context);
     
-    JamlTokeniserUtils::skipCData(token);
-    return JamlTokenList::CDataText;
+    xercesc::XercesDOMParser parser;
+    parser.setValidationScheme(xercesc::XercesDOMParser::Val_Always);
+    parser.setDoNamespaces(true);
 }
+

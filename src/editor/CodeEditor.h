@@ -1,433 +1,182 @@
-/*
-  ==============================================================================
+/**
+    ===============================================================
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any internal version.
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-   JUCE is an open source library subject to commercial or open-source
-   licensing.
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+    Copyright (c) 2021 ElandaSunshine
+    ===============================================================
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+    @author Elanda
+    @file   CodeEditor.h
+    @date   09, January 2022
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
-
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
-
-  ==============================================================================
-*/
+    ===============================================================
+ */
 
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-class TokenHighlighter;
-class CodeEditor : public juce::Component, public juce::ApplicationCommandTarget, public juce::TextInputTarget
+struct TextMateGrammar;
+class CodeEditor : public juce::Component, public juce::CodeDocument::Listener
 {
 public:
-    CodeEditor(juce::CodeDocument& document, TokenHighlighter* codeTokeniser);
+    static constexpr int Line_Height_Padding   =  2;
+    static constexpr int Scroll_Bar_Cross_Size = 10;
     
-    /** Destructor. */
+    //==================================================================================================================
+    struct ColourId
+    {
+        enum
+        {
+            Background            = 0x420690,
+            Caret                 = 0x420691,
+            CurrentLineBackground = 0x420692,
+            SelectionBackground   = 0x420693,
+            Text                  = 0x420694,
+            FoldRegion            = 0x420695
+        };
+    };
+    
+    //==================================================================================================================
+    explicit CodeEditor(juce::CodeDocument &document);
     ~CodeEditor() override;
     
-    //==============================================================================
-    /** Returns the code document that this component is editing. */
-    juce::CodeDocument& getDocument() const noexcept          { return document; }
-    
-    /** Loads the given content into the document.
-        This will completely reset the CodeDocument object, clear its undo history,
-        and fill it with this text.
-    */
-    void loadContent (const juce::String& newContent);
-    
-    //==============================================================================
-    /** Returns the standard character width. */
-    float getCharWidth() const noexcept                         { return charWidth; }
-    
-    /** Returns the height of a line of text, in pixels. */
-    int getLineHeight() const noexcept                          { return lineHeight; }
-    
-    /** Returns the number of whole lines visible on the screen,
-        This doesn't include a cut-off line that might be visible at the bottom if the
-        component's height isn't an exact multiple of the line-height.
-    */
-    int getNumLinesOnScreen() const noexcept                    { return linesOnScreen; }
-    
-    /** Returns the index of the first line that's visible at the top of the editor. */
-    int getFirstLineOnScreen() const noexcept                   { return firstLineOnScreen; }
-    
-    /** Returns the number of whole columns visible on the screen.
-        This doesn't include any cut-off columns at the right-hand edge.
-    */
-    int getNumColumnsOnScreen() const noexcept                  { return columnsOnScreen; }
-    
-    /** Returns the current caret position. */
-    juce::CodeDocument::Position getCaretPos() const                  { return caretPos; }
-    
-    /** Returns the position of the caret, relative to the editor's origin. */
-    juce::Rectangle<int> getCaretRectangle() override;
-    
-    /** Moves the caret.
-        If selecting is true, the section of the document between the current
-        caret position and the new one will become selected. If false, any currently
-        selected region will be deselected.
-    */
-    void moveCaretTo (const juce::CodeDocument::Position& newPos, bool selecting);
-    
-    /** Returns the on-screen position of a character in the document.
-        The rectangle returned is relative to this component's top-left origin.
-    */
-    juce::Rectangle<int> getCharacterBounds (const juce::CodeDocument::Position& pos) const;
-    
-    /** Finds the character at a given on-screen position.
-        The coordinates are relative to this component's top-left origin.
-    */
-    juce::CodeDocument::Position getPositionAt (int x, int y) const;
-    
-    /** Returns the start of the selection as a position. */
-    juce::CodeDocument::Position getSelectionStart() const            { return selectionStart; }
-    
-    /** Returns the end of the selection as a position. */
-    juce::CodeDocument::Position getSelectionEnd() const              { return selectionEnd; }
-    
-    /** Enables or disables the line-number display in the gutter. */
-    void setLineNumbersShown (bool shouldBeShown);
-    
-    //==============================================================================
-    bool moveCaretLeft (bool moveInWholeWordSteps, bool selecting);
-    bool moveCaretRight (bool moveInWholeWordSteps, bool selecting);
-    bool moveCaretUp (bool selecting);
-    bool moveCaretDown (bool selecting);
-    bool scrollDown();
-    bool scrollUp();
-    bool pageUp (bool selecting);
-    bool pageDown (bool selecting);
-    bool moveCaretToTop (bool selecting);
-    bool moveCaretToStartOfLine (bool selecting);
-    bool moveCaretToEnd (bool selecting);
-    bool moveCaretToEndOfLine (bool selecting);
-    bool deleteBackwards (bool moveInWholeWordSteps);
-    bool deleteForwards (bool moveInWholeWordSteps);
-    bool deleteWhitespaceBackwardsToTabStop();
-    virtual bool copyToClipboard();
-    virtual bool cutToClipboard();
-    virtual bool pasteFromClipboard();
-    bool undo();
-    bool redo();
-    
-    void selectRegion (const juce::CodeDocument::Position& start, const juce::CodeDocument::Position& end);
-    bool selectAll();
-    void deselectAll();
-    
-    void scrollToLine (int newFirstLineOnScreen);
-    void scrollBy (int deltaLines);
-    void scrollToColumn (int newFirstColumnOnScreen);
-    void scrollToKeepCaretOnScreen();
-    void scrollToKeepLinesOnScreen (juce::Range<int> linesToShow);
-    
-    void insertTextAtCaret (const juce::String& textToInsert) override;
-    void insertTabAtCaret();
-    
-    void indentSelection();
-    void unindentSelection();
-    
-    //==============================================================================
-    juce::Range<int> getHighlightedRegion() const override;
-    bool isHighlightActive() const noexcept;
-    void setHighlightedRegion (const juce::Range<int>& newRange) override;
-    juce::String getTextInRange (const juce::Range<int>& range) const override;
-    
-    //==============================================================================
-    /** Can be used to save and restore the editor's caret position, selection state, etc. */
-    struct State
-    {
-        /** Creates an object containing the state of the given editor. */
-        State (const CodeEditor&);
-        /** Creates a state object from a string that was previously created with toString(). */
-        State (const juce::String& stringifiedVersion);
-        State (const State&) noexcept;
-        
-        /** Updates the given editor with this saved state. */
-        void restoreState (CodeEditor&) const;
-        
-        /** Returns a stringified version of this state that can be used to recreate it later. */
-        juce::String toString() const;
-    
-    private:
-        int lastTopLine, lastCaretPos, lastSelectionEnd;
-    };
-    
-    //==============================================================================
-    /** Changes the current tab settings.
-        This lets you change the tab size and whether pressing the tab key inserts a
-        tab character, or its equivalent number of spaces.
-    */
-    void setTabSize (int numSpacesPerTab, bool insertSpacesInsteadOfTabCharacters);
-    
-    /** Returns the current number of spaces per tab.
-        @see setTabSize
-    */
-    int getTabSize() const noexcept                     { return spacesPerTab; }
-    
-    /** Returns true if the tab key will insert spaces instead of actual tab characters.
-        @see setTabSize
-    */
-    bool areSpacesInsertedForTabs() const               { return useSpacesForTabs; }
-    
-    /** Returns a string containing spaces or tab characters to generate the given number of spaces. */
-    juce::String getTabString (int numSpaces) const;
-    
-    /** Changes the font.
-        Make sure you only use a fixed-width font, or this component will look pretty nasty!
-    */
-    void setFont (const juce::Font& newFont);
-    
-    /** Returns the font that the editor is using. */
-    const juce::Font& getFont() const noexcept                { return font; }
-    
-    /** Makes the editor read-only. */
-    void setReadOnly (bool shouldBeReadOnly) noexcept;
-    
-    /** Returns true if the editor is set to be read-only. */
-    bool isReadOnly() const noexcept                    { return readOnly; }
-    
-    //==============================================================================
-    /** Defines a syntax highlighting colour scheme */
-    struct JUCE_API  ColourScheme
-        {
-            /** Defines a colour for a token type */
-            struct TokenType
-            {
-                juce::String name;
-                juce::Colour colour;
-                int          styleFlags;
-            };
-    
-            juce::Array<TokenType> types;
-            
-            void set (const juce::String& name, juce::Colour colour, int styleFlags = 0);
-        };
-    
-    /** Changes the syntax highlighting scheme.
-        The token type values are dependent on the tokeniser being used - use
-        TokenHighlighter::getTokenTypes() to get a list of the token types.
-        @see getColourForTokenType
-    */
-    void setColourScheme (const ColourScheme& scheme);
-    
-    /** Returns the current syntax highlighting colour scheme. */
-    const ColourScheme& getColourScheme() const noexcept    { return colourScheme; }
-    
-    /** Returns one the syntax highlighting colour for the given token.
-        The token type values are dependent on the tokeniser being used.
-        @see setColourScheme
-    */
-    ColourScheme::TokenType getTokenTypeForId (int tokenType) const;
-    
-    /** Rebuilds the syntax highlighting for a section of text.
-
-        This happens automatically any time the CodeDocument is edited, but this
-        method lets you change text colours even when the CodeDocument hasn't changed.
-
-        For example, you could use this to highlight tokens as the cursor moves.
-        To do so you'll need to tell your custom TokenHighlighter where the token you
-        want to highlight is, and make it return a special type of token. Then you
-        should call this method supplying the range of the highlighted text.
-        @see TokenHighlighter
-     */
-    void retokenise (int startIndex, int endIndex);
-    
-    //==============================================================================
-    /** A set of colour IDs to use to change the colour of various aspects of the editor.
-
-        These constants can be used either via the Component::setColour(), or LookAndFeel::setColour()
-        methods.
-
-        @see Component::setColour, Component::findColour, LookAndFeel::setColour, LookAndFeel::findColour
-    */
-    enum ColourIds
-    {
-        backgroundColourId          = 0x1004500,  /**< A colour to use to fill the editor's background. */
-        highlightColourId           = 0x1004502,  /**< The colour to use for the highlighted background under selected text. */
-        defaultTextColourId         = 0x1004503,  /**< The colour to use for text when no syntax colouring is enabled. */
-        lineNumberBackgroundId      = 0x1004504,  /**< The colour to use for filling the background of the line-number gutter. */
-        lineNumberTextId            = 0x1004505,  /**< The colour to use for drawing the line numbers. */
-    };
-    
-    //==============================================================================
-    /** Changes the size of the scrollbars. */
-    void setScrollbarThickness (int thickness);
-    
-    /** Returns the thickness of the scrollbars. */
-    int getScrollbarThickness() const noexcept          { return scrollbarThickness; }
-    
-    //==============================================================================
-    /** Called when the return key is pressed - this can be overridden for custom behaviour. */
-    virtual void handleReturnKey();
-    /** Called when the tab key is pressed - this can be overridden for custom behaviour. */
-    virtual void handleTabKey();
-    /** Called when the escape key is pressed - this can be overridden for custom behaviour. */
-    virtual void handleEscapeKey();
-    
-    /** Called when the view position is scrolled horizontally or vertically. */
-    virtual void editorViewportPositionChanged();
-    
-    /** Called when the caret position moves. */
-    virtual void caretPositionMoved();
-    
-    //==============================================================================
-    /** This adds the items to the popup menu.
-
-        By default it adds the cut/copy/paste items, but you can override this if
-        you need to replace these with your own items.
-
-        If you want to add your own items to the existing ones, you can override this,
-        call the base class's addPopupMenuItems() method, then append your own items.
-
-        When the menu has been shown, performPopupMenuAction() will be called to
-        perform the item that the user has chosen.
-
-        If this was triggered by a mouse-click, the mouseClickEvent parameter will be
-        a pointer to the info about it, or may be null if the menu is being triggered
-        by some other means.
-
-        @see performPopupMenuAction, setPopupMenuEnabled, isPopupMenuEnabled
-    */
-    virtual void addPopupMenuItems (juce::PopupMenu& menuToAddTo,
-                                    const juce::MouseEvent* mouseClickEvent);
-    
-    /** This is called to perform one of the items that was shown on the popup menu.
-
-        If you've overridden addPopupMenuItems(), you should also override this
-        to perform the actions that you've added.
-
-        If you've overridden addPopupMenuItems() but have still left the default items
-        on the menu, remember to call the superclass's performPopupMenuAction()
-        so that it can perform the default actions if that's what the user clicked on.
-
-        @see addPopupMenuItems, setPopupMenuEnabled, isPopupMenuEnabled
-    */
-    virtual void performPopupMenuAction (int menuItemID);
-    
-    /** Specifies a command-manager which the editor will notify whenever the state
-        of any of its commands changes.
-        If you're making use of the editor's ApplicationCommandTarget interface, then
-        you should also use this to tell it which command manager it should use. Make
-        sure that the manager does not go out of scope while the editor is using it. You
-        can pass a nullptr here to disable this.
-    */
-    void setCommandManager (juce::ApplicationCommandManager* newManager) noexcept;
-    
-    //==============================================================================
-    /** @internal */
-    void paint (juce::Graphics&) override;
-    /** @internal */
+    //==================================================================================================================
+    void paint(juce::Graphics &g) override;
     void resized() override;
-    /** @internal */
-    bool keyPressed (const juce::KeyPress&) override;
-    /** @internal */
-    void mouseDown (const juce::MouseEvent&) override;
-    /** @internal */
-    void mouseDrag (const juce::MouseEvent&) override;
-    /** @internal */
-    void mouseUp (const juce::MouseEvent&) override;
-    /** @internal */
-    void mouseDoubleClick (const juce::MouseEvent&) override;
-    /** @internal */
-    void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
-    /** @internal */
-    void focusGained (FocusChangeType) override;
-    /** @internal */
-    void focusLost (FocusChangeType) override;
-    /** @internal */
-    bool isTextInputActive() const override;
-    /** @internal */
-    void setTemporaryUnderlining (const juce::Array<juce::Range<int>>&) override;
-    /** @internal */
-    ApplicationCommandTarget* getNextCommandTarget() override;
-    /** @internal */
-    void getAllCommands (juce::Array<juce::CommandID>&) override;
-    /** @internal */
-    void getCommandInfo (juce::CommandID, juce::ApplicationCommandInfo&) override;
-    /** @internal */
-    bool perform (const InvocationInfo&) override;
-    /** @internal */
-    void lookAndFeelChanged() override;
     
-    private:
-    //==============================================================================
-    juce::CodeDocument& document;
+    //==================================================================================================================
+    juce::CodeDocument&       getDocument()       noexcept;
+    const juce::CodeDocument& getDocument() const noexcept;
     
-    juce::Font font;
-    int firstLineOnScreen = 0, spacesPerTab = 4;
-    float charWidth = 0;
-    int lineHeight = 0, linesOnScreen = 0, columnsOnScreen = 0;
-    int scrollbarThickness = 16, columnToTryToMaintain = -1;
-    bool readOnly = false, useSpacesForTabs = true, showLineNumbers = false, shouldFollowDocumentChanges = false;
-    double xOffset = 0;
-    juce::CodeDocument::Position caretPos, selectionStart, selectionEnd;
-    
-    std::unique_ptr<juce::CaretComponent> caret;
-    juce::ScrollBar verticalScrollBar { true }, horizontalScrollBar { false };
-    juce::ApplicationCommandManager* appCommandManager = nullptr;
-    
-    class Pimpl;
-    std::unique_ptr<Pimpl> pimpl;
-    
-    class GutterComponent;
-    std::unique_ptr<GutterComponent> gutter;
-    
-    class CodeEditorAccessibilityHandler;
-    
-    enum DragType
+private:
+    class Gutter : public juce::Component
     {
-        notDragging,
-        draggingSelectionStart,
-        draggingSelectionEnd
+    public:
+        int getNeededWidth() const noexcept { return 0; }
     };
     
-    DragType dragType = notDragging;
+    class Line
+    {
+    public:
+        struct DescriptionToken
+        {
+            juce::String text;
+            int          startPos;
+        };
+        
+        struct SyntaxToken
+        {
+            juce::Range<int> tokenRange;
+            int              tokenId;
+        };
+        
+        struct FoldRegion
+        {
+            enum class Point
+            {
+                None,
+                Open,
+                Close
+            };
+            
+            //==========================================================================================================
+            juce::Range<int> foldRange;
+            Point            point;
+            int              startIndex;
+            bool             collapsed;
+        };
+        
+        //==============================================================================================================
+        void drawLine(const CodeEditor &editor, juce::Rectangle<float> bounds, int startPos) const;
+        
+        //==============================================================================================================
+        bool isExtendedLine() const noexcept;
+        
+        //==============================================================================================================
+        const FoldRegion&   getFoldRegion() const noexcept;
+        const juce::String& getLineText()   const noexcept;
+        
+        
+    private:
+        std::vector<DescriptionToken> descriptionTokens;
+        std::vector<SyntaxToken>      tokens;
+        juce::String                  lineText;
+        FoldRegion                    foldRegion { {}, FoldRegion::Point::None, 0, false };
+    };
     
-    //==============================================================================
-    TokenHighlighter* codeTokeniser;
-    ColourScheme colourScheme;
+    struct LineReference
+    {
+        int lineIndex { -1 };
+    };
     
-    class CodeEditorLine;
-    juce::OwnedArray<CodeEditorLine> lines;
-    void rebuildLineTokens();
-    void rebuildLineTokensAsync();
-    void codeDocumentChanged (int start, int end);
+    struct DocumentCaret
+    {
+        juce::CodeDocument::Position position;
+        juce::CaretComponent         caret;
+    };
     
-    juce::Array<juce::CodeDocument::Iterator> cachedIterators;
-    void clearCachedIterators (int firstLineToBeInvalid);
-    void updateCachedIterators (int maxLineNum);
-    void getIteratorForPosition (int position, juce::CodeDocument::Iterator&);
+    struct SchemeEntry
+    {
+        juce::Colour colour;
+        int          styleFlags;
+    };
     
-    void moveLineDelta (int delta, bool selecting);
-    int getGutterSize() const noexcept;
+    enum class TextUpdateMode
+    {
+        Resized
+    };
     
-    //==============================================================================
-    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-    void insertText (const juce::String&);
-    virtual void updateCaretPosition();
+    //==================================================================================================================
+    juce::CodeDocument *document;
+    
+    juce::ScrollBar scrollBarRight;
+    juce::ScrollBar scrollBarBottom;
+    DocumentCaret   mainCaret;
+    Gutter          gutter;
+    
+    // Lines
+    std::vector<Line>          lines;
+    std::vector<SchemeEntry>   scheme;
+    std::vector<DocumentCaret> carets;
+    std::array<int, 4>         rulers {};
+    
+    juce::Rectangle<int> editorBounds;
+    juce::Font           font;
+    
+    float charWidth;
+    float lineSpacing;
+    
+    bool readOnly      { false };
+    bool scrollPastEnd { false };
+    
+    //==================================================================================================================
+    void drawFoldedLine(juce::Graphics &g, juce::Rectangle<float> bounds,
+                        const Line &startLine, const Line &endLine, int startPos);
+    
+    //==================================================================================================================
+    bool keyPressed(const juce::KeyPress &key) override;
+    
+    //==================================================================================================================
+    void codeDocumentTextInserted(const juce::String&, int) override;
+    void codeDocumentTextDeleted(int, int) override;
+    
+    //==================================================================================================================
     void updateScrollBars();
-    void scrollToLineInternal (int line);
-    void scrollToColumnInternal (double column);
-    void newTransaction();
-    void cut();
-    void indentSelectedLines (int spacesToAdd);
-    bool skipBackwardsToPreviousTab();
-    bool performCommand (juce::CommandID);
-    void setSelection (juce::CodeDocument::Position, juce::CodeDocument::Position);
     
-    int indexToColumn (int line, int index) const noexcept;
-    int columnToIndex (int line, int column) const noexcept;
+    //==================================================================================================================
+    void fillSchemeList(const TextMateGrammar &grammar);
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CodeEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CodeEditor)
 };

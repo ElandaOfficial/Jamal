@@ -20,7 +20,8 @@ project(${JAMAL_PROJECT_TARGET}
 # Dependencies
 add_subdirectory(lib/juce)
 add_subdirectory(lib/jaut)
-add_subdirectory(lib/colorer)
+add_subdirectory(lib/xerces-c)
+add_subdirectory(lib/small_vector)
 
 ########################################################################################################################
 juce_add_gui_app(${JAMAL_PROJECT_TARGET}
@@ -51,4 +52,8 @@ target_link_libraries(${JAMAL_PROJECT_TARGET}
         juce::juce_recommended_warning_flags
 
         # Jaut
-        jaut::jaut_gui)
+        jaut::jaut_gui
+    
+        # 3rd party
+        xerces-c
+        small_vector)
